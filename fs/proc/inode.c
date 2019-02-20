@@ -219,12 +219,17 @@ static loff_t proc_reg_llseek(struct file *file, loff_t offset, int whence)
 static ssize_t proc_reg_read(struct file *file, char __user *buf, size_t count, loff_t *ppos)
 {
 	ssize_t (*read)(struct file *, char __user *, size_t, loff_t *);
-	struct proc_dir_entry *pde = PDE(file_inode(file));
+	struct inode *inode = file_inode(file);
+	struct proc_dir_entry *pde = PDE(inode);
 	ssize_t rv = -EIO;
 	if (use_pde(pde)) {
 		read = pde->proc_fops->read;
-		if (read)
+		if (read) {
 			rv = read(file, buf, count, ppos);
+			if (rv >= 0)
+				inode->i_atime = current_time(inode);
+		}
+
 		unuse_pde(pde);
 	}
 	return rv;
