@@ -9,6 +9,7 @@ GPU Driver Documentation
    i915
    mcde
    meson
+   nouveau
    pl111
    tegra
    tve200
