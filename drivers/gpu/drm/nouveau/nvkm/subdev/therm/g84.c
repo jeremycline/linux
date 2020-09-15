@@ -34,7 +34,7 @@ g84_temp_get(struct nvkm_therm *therm, int *temp)
 	if (nvkm_fuse_read(device->fuse, 0x1a8) != 1)
 		return -ENODEV;
 
-	*temp = nvkm_rd32(device, 0x20400);
+	*temp = nvkm_rd32(device, 0x20400) * 1000;
 	return 0;
 }
 
@@ -116,7 +116,7 @@ g84_therm_threshold_hyst_emulation(struct nvkm_therm *therm,
 	}
 
 	/* fix the state (in case someone reprogrammed the alarms) */
-	WARN_ON(nvkm_therm_temp_get(therm, &cur) < 0);
+	WARN_ON(nvkm_therm_temp_get_c(therm, &cur) < 0);
 	if (new_state == NVKM_THERM_THRS_LOWER && cur > thrs->temp)
 		new_state = NVKM_THERM_THRS_HIGHER;
 	else if (new_state == NVKM_THERM_THRS_HIGHER &&

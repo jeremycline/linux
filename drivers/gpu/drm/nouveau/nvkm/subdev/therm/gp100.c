@@ -39,7 +39,7 @@ gp100_temp_get(struct nvkm_therm *therm, int *temp)
 	if (!(tsensor & 0x20000000))
 		return -ENODEV;
 
-	*temp = inttemp >> 8;
+	*temp = inttemp * 1000 >> 8;
 	return 0;
 }
 

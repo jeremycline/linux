@@ -88,7 +88,7 @@ nvkm_therm_sensor_event(struct nvkm_therm *therm, enum nvkm_therm_thrs thrs,
 	};
 	int temperature;
 
-	WARN_ON(nvkm_therm_temp_get(therm, &temperature) < 0);
+	WARN_ON(nvkm_therm_temp_get_c(therm, &temperature) < 0);
 
 	if (thrs < 0 || thrs > 3)
 		return;
@@ -144,7 +144,7 @@ nvkm_therm_threshold_hyst_polling(struct nvkm_therm *therm,
 	enum nvkm_therm_thrs_state prev_state, new_state;
 	int temp;
 
-	WARN_ON(nvkm_therm_temp_get(therm, &temp) < 0);
+	WARN_ON(nvkm_therm_temp_get_c(therm, &temp) < 0);
 
 	prev_state = nvkm_therm_sensor_get_threshold_state(therm, thrs_name);
 

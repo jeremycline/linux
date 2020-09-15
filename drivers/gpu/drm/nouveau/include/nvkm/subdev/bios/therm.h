@@ -1,6 +1,12 @@
 /* SPDX-License-Identifier: MIT */
 #ifndef __NVBIOS_THERM_H__
 #define __NVBIOS_THERM_H__
+
+/**
+ * struct nvbios_therm_threshold - The threshold of a thermal event.
+ * @temp: The temperature, in degrees Celsius, of the thermal threshold.
+ * @hysteresis: The hysteresis of this threshold, in degrees Celsius.
+ */
 struct nvbios_therm_threshold {
 	u8 temp;
 	u8 hysteresis;
@@ -29,6 +35,13 @@ enum nvbios_therm_fan_type {
 
 /* no vbios have more than 6 */
 #define NVKM_TEMP_FAN_TRIP_MAX 10
+
+/**
+ * struct nvbios_therm_trip_point - Represents a thermal trip point.
+ * @fan_duty: The fan's duty cycle as a percentage. Valid values are 0-100.
+ * @temp: The temperature of this trip point, in degrees Celsius.
+ * @hysteresis: the hysteresis to use at this trip point, in degrees Celsius.
+ */
 struct nvbios_therm_trip_point {
 	int fan_duty;
 	int temp;

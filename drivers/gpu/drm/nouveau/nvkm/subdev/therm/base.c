@@ -39,6 +39,15 @@ nvkm_therm_temp_get(struct nvkm_therm *therm, int *temp)
 	return -ENODEV;
 }
 
+int
+nvkm_therm_temp_get_c(struct nvkm_therm *therm, int *temp)
+{
+	int ret = nvkm_therm_temp_get(therm, temp);
+	if (temp != NULL)
+		*temp /= 1000;
+	return ret;
+}
+
 static int
 nvkm_therm_update_trip(struct nvkm_therm *therm)
 {
@@ -48,7 +57,7 @@ nvkm_therm_update_trip(struct nvkm_therm *therm)
 	int temp;
 	u16 duty, i;
 
-	WARN_ON(nvkm_therm_temp_get(therm, &temp) < 0);
+	WARN_ON(nvkm_therm_temp_get_c(therm, &temp) < 0);
 
 	/* look for the trip point corresponding to the current temperature */
 	cur_trip = NULL;
@@ -80,7 +89,7 @@ nvkm_therm_compute_linear_duty(struct nvkm_therm *therm, u8 linear_min_temp,
 	int temp;
 	u16 duty;
 
-	WARN_ON(nvkm_therm_temp_get(therm, &temp) < 0);
+	WARN_ON(nvkm_therm_temp_get_c(therm, &temp) < 0);
 
 	/* handle the non-linear part first */
 	if (temp < linear_min_temp)

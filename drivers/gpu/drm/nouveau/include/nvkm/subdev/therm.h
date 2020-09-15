@@ -99,7 +99,33 @@ struct nvkm_therm {
 	bool clkgating_enabled;
 };
 
+/**
+ * nvkm_therm_temp_get() - get the temperature in millidegrees Celsius
+ * @therm: The thermal device to read from.
+ * @temp: A pointer to write the temperature reading to. Passing NULL is
+ * 		allowed, useful if you only need to check that it's possible to
+ * 		read a temperature.
+ *
+ * Note that because some cards are only capable of reporting temperatures in
+ * integer degrees Celsius or, if they support fractional degrees, not support
+ * millidegree accuracy, the accuracy of this interface is hardware dependent.
+ *
+ * Returns: Zero on success, or a negative error code on failure.
+ */
 int nvkm_therm_temp_get(struct nvkm_therm *therm, int *temp);
+
+/**
+ * nvkm_therm_temp_get_c() - get the temperature in degrees Celsius
+ * @therm: The thermal device to read from.
+ * @temp: A pointer to write the temperature reading to.
+ *
+ * A convenient wrapper for nvkm_therm_temp_get() that converts to degrees
+ * Celsius.
+ *
+ * Returns: Zero on success, or a negative error code on failure.
+ */
+int nvkm_therm_temp_get_c(struct nvkm_therm *therm, int *temp);
+
 int nvkm_therm_fan_sense(struct nvkm_therm *);
 int nvkm_therm_cstate(struct nvkm_therm *, int, int);
 void nvkm_therm_clkgate_init(struct nvkm_therm *,

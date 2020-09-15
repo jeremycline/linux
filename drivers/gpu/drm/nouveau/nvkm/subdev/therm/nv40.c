@@ -95,7 +95,7 @@ nv40_temp_get(struct nvkm_therm *therm, int *temp)
 	core_temp = core_temp + sensor->offset_num / sensor->offset_den;
 	core_temp = core_temp + sensor->offset_constant - 8;
 
-	*temp = core_temp;
+	*temp = core_temp * 1000;
 	return 0;
 }
 
