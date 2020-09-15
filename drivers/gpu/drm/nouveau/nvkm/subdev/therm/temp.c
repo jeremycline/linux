@@ -86,7 +86,9 @@ nvkm_therm_sensor_event(struct nvkm_therm *therm, enum nvkm_therm_thrs thrs,
 	static const char * const thresholds[] = {
 		"fanboost", "downclock", "critical", "shutdown"
 	};
-	int temperature = therm->func->temp_get(therm);
+	int temperature;
+
+	WARN_ON(nvkm_therm_temp_get(therm, &temperature) < 0);
 
 	if (thrs < 0 || thrs > 3)
 		return;
@@ -140,7 +142,9 @@ nvkm_therm_threshold_hyst_polling(struct nvkm_therm *therm,
 {
 	enum nvkm_therm_thrs_direction direction;
 	enum nvkm_therm_thrs_state prev_state, new_state;
-	int temp = therm->func->temp_get(therm);
+	int temp;
+
+	WARN_ON(nvkm_therm_temp_get(therm, &temp) < 0);
 
 	prev_state = nvkm_therm_sensor_get_threshold_state(therm, thrs_name);
 
@@ -185,7 +189,7 @@ alarm_timer_callback(struct nvkm_alarm *alarm)
 	spin_unlock_irqrestore(&therm->sensor.alarm_program_lock, flags);
 
 	/* schedule the next poll in one second */
-	if (therm->func->temp_get(therm) >= 0)
+	if (nvkm_therm_temp_get(therm, NULL) >= 0)
 		nvkm_timer_alarm(tmr, 1000000000ULL, alarm);
 }
 
@@ -229,7 +233,7 @@ nvkm_therm_sensor_preinit(struct nvkm_therm *therm)
 {
 	const char *sensor_avail = "yes";
 
-	if (therm->func->temp_get(therm) < 0)
+	if (nvkm_therm_temp_get(therm, NULL) < 0)
 		sensor_avail = "no";
 
 	nvkm_debug(&therm->subdev, "internal sensor: %s\n", sensor_avail);

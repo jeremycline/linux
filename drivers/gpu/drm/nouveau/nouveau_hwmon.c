@@ -325,7 +325,7 @@ nouveau_temp_is_visible(const void *data, u32 attr, int channel)
 	struct nouveau_drm *drm = nouveau_drm((struct drm_device *)data);
 	struct nvkm_therm *therm = nvxx_therm(&drm->client.device);
 
-	if (!therm || !therm->attr_get || nvkm_therm_temp_get(therm) < 0)
+	if (!therm || !therm->attr_get || nvkm_therm_temp_get(therm, NULL) < 0)
 		return 0;
 
 	switch (attr) {
@@ -419,7 +419,7 @@ nouveau_temp_read(struct device *dev, u32 attr, int channel, long *val)
 	struct drm_device *drm_dev = dev_get_drvdata(dev);
 	struct nouveau_drm *drm = nouveau_drm(drm_dev);
 	struct nvkm_therm *therm = nvxx_therm(&drm->client.device);
-	int ret;
+	int ret = 0, temp;
 
 	if (!therm || !therm->attr_get)
 		return -EOPNOTSUPP;
@@ -428,8 +428,8 @@ nouveau_temp_read(struct device *dev, u32 attr, int channel, long *val)
 	case hwmon_temp_input:
 		if (drm_dev->switch_power_state != DRM_SWITCH_POWER_ON)
 			return -EINVAL;
-		ret = nvkm_therm_temp_get(therm);
-		*val = ret < 0 ? ret : (ret * 1000);
+		ret = nvkm_therm_temp_get(therm, &temp);
+		*val = temp * 1000;
 		break;
 	case hwmon_temp_max:
 		*val = therm->attr_get(therm, NVKM_THERM_ATTR_THRS_DOWN_CLK)
@@ -459,7 +459,7 @@ nouveau_temp_read(struct device *dev, u32 attr, int channel, long *val)
 		return -EOPNOTSUPP;
 	}
 
-	return 0;
+	return ret;
 }
 
 static int
@@ -735,7 +735,7 @@ nouveau_hwmon_init(struct drm_device *dev)
 	hwmon->dev = dev;
 
 	if (therm && therm->attr_get && therm->attr_set) {
-		if (nvkm_therm_temp_get(therm) >= 0)
+		if (nvkm_therm_temp_get(therm, NULL) >= 0)
 			special_groups[i++] = &temp1_auto_point_sensor_group;
 		if (therm->fan_get && therm->fan_get(therm) >= 0)
 			special_groups[i++] = &pwm_fan_sensor_group;

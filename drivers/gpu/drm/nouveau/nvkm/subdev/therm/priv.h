@@ -91,7 +91,15 @@ struct nvkm_therm_func {
 	int (*pwm_set)(struct nvkm_therm *, int line, u32, u32);
 	int (*pwm_clock)(struct nvkm_therm *, int line);
 
-	int (*temp_get)(struct nvkm_therm *);
+	/**
+	 * @temp_get: Get the temperature reading from a thermal device
+	 *
+	 * @therm: The thermal device instance.
+	 * @temp: A pointer to write the temperature reading to.
+	 *
+	 * Returns: Zero on success, or a negative error code on failure.
+	 */
+	int (*temp_get)(struct nvkm_therm *therm, int *temp);
 
 	int (*fan_sense)(struct nvkm_therm *);
 
@@ -110,7 +118,12 @@ int  nv50_fan_pwm_get(struct nvkm_therm *, int, u32 *, u32 *);
 int  nv50_fan_pwm_set(struct nvkm_therm *, int, u32, u32);
 int  nv50_fan_pwm_clock(struct nvkm_therm *, int);
 
-int  g84_temp_get(struct nvkm_therm *);
+/**
+ * g84_temp_get() - An implementation of the &struct nvkm_therm_func temp_get()
+ * @therm: The thermal device instance.
+ * @temp: A pointer to write the temperature reading to.
+ */
+int  g84_temp_get(struct nvkm_therm *therm, int *temp);
 void g84_sensor_setup(struct nvkm_therm *);
 void g84_therm_fini(struct nvkm_therm *);
 
