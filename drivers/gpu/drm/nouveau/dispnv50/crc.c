@@ -699,6 +699,14 @@ out:
 	return ret;
 }
 
+/**
+ * DOC: nv_crc/flip_threshold
+ *
+ * The number of CRC entries to place in a notifier context before attempting to
+ * flip to the other notifier context. Writing ``-1`` to this file will reset
+ * the threshold to the default value, which is hardware-dependent. Values
+ * cannot be greater than the default or less than -1.
+ */
 static const struct file_operations nv50_crc_flip_threshold_fops = {
 	.owner = THIS_MODULE,
 	.open = nv50_crc_debugfs_flip_threshold_open,

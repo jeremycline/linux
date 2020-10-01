@@ -1,21 +1,51 @@
 =======
 Nouveau
 =======
-This document provides a general overview of the driver, contribution details,
-internal API documentation, and glossary. It is strictly for the nouveau kernel
-driver. The userspace side of nouveau is documented at the `nouveau freedesktop
-wiki <https://nouveau.freedesktop.org/wiki/>`_.
+Nouveau is the free/libre driver for NVIDIA GPUs. This documentation is for the
+kernel mode-setting driver, and is meant to complement the general `nouveau`_
+documentation, which contains end user documentation and a general overview of
+the project, and `envytools`_, which covers reverse-engineering and the
+hardware architecture of the individual card families.
+
+Issues with this driver are tracked on Nouveau's freedesktop.org `issue
+tracker`_.
 
 If you'd like to improve this documentation, great! Refer to the :doc:`Sphinx
 introduction </doc-guide/sphinx>` and :doc:`/doc-guide/kernel-doc` documents
 for details on how to do so.
 
+User Guide
+==========
+As noted in the introduction, this document is for the kernel portion of the
+nouveau driver and is primarily focused on documentation for developers. This
+
+TODO Layout
+
+Introduction: Cover envytools, nouveau wiki documentation and role, and how
+this is for kernel specific bits.
+
+User Documentation: Point to the nouveau wiki, down to module parameters.
+
+Kernel-specific troubleshooting, Module Parameters
+
+Developer Guide
+  - Driver Overview (maybe point to envytools here)
+  - External APIs (include/uapi/drm/nouveau_drm.h, any sysfs stuff)?
+  - Internal APIs
+  - Debugging and Development Tools
+  - Contribution Guide
+
+
 Module Parameters
 =================
-A number of module parameters are supported. Each parameter requires a value.
-These can be passed via the kernel command line using the format
-"nouveau.<parameter-name>=<value>". Boolean values should use 1 for true and 0
-for false.
+A number of module parameters are provided to tweak the behavior of the driver.
+These are provided to ease debugging issues and users that need to set a
+parameter to fix an issue they are experiencing should report this as a bug on
+the `issue tracker`_.
+
+Each parameter requires a value. These can be passed via the kernel command
+line using the format "nouveau.<parameter-name>=<value>". Boolean values should
+use 1 for true and 0 for false.
 
 .. kernel-doc:: drivers/gpu/drm/nouveau/nouveau_drm.c
 
@@ -28,13 +58,15 @@ The driver is located in ``drivers/gpu/drm/nouveau/``.
    `out-of-tree driver <https://github.com/skeggsb/nouveau>`_.
 
 Within the driver, there are several distinct sections. The reason for this is
-that NVIDIA hardware is partitioned into "privileged" and "user" blocks.
+that NVIDIA hardware is partitioned into "privileged" and "user" blocks. For
+more details on the particulars of NVIDIA's hardware, consult `envytools`_.
 
-The general architecture is described in the diagram below.
+The general module architecture from userspace to the hardware lay is described
+in the diagram below.
 
 .. kernel-render:: DOT
-   :alt: Nouveau Architecture Diagram
-   :caption: Nouveau Architecture Diagram
+   :alt: Nouveau Software Architecture Diagram
+   :caption: Nouveau Software Architecture Diagram
 
    digraph "Nouveau" {
       node [shape=box]
@@ -97,7 +129,24 @@ to the :doc:`drm-internals`, :doc:`drm-kms`, and :doc:`drm-uapi` documents.
 
 API
 ===
-This section includes the kernel-docs for nouveau APIs.
+In this section the interfaces provided by nouveau, both internal and public
+userspace interfaces, are described.
+
+Userspace Interfaces
+--------------------
+Like other DRM drivers, much of the interface exposed to userspace is
+documented in :doc:`drm-uapi`. There are a few nouveau-specific interfaces.
+
+debugfs
+~~~~~~~
+Nouveau exposes the following :doc:`DebugFS </filesystems/debugfs>` files.
+
+.. warning:: Debugfs is intended for developers and test tooling only.
+
+nv_crc/flip_threshold
+^^^^^^^^^^^^^^^^^^^^^
+.. kernel-doc:: drivers/gpu/drm/nouveau/dispnv50/crc.c
+   :doc: nv_crc/flip_threshold
 
 
 NVKM
@@ -127,3 +176,7 @@ documentation.
         Channels are hardware blocks that consumes methods from a
         direct-memory-accessed command stream.
 
+
+.. _nouveau: https://nouveau.freedesktop.org/
+.. _envytools: https://envytools.readthedocs.io/
+.. _issue track: https://gitlab.freedesktop.org/drm/nouveau/-/issues
