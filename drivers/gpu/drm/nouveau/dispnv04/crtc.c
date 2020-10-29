@@ -915,7 +915,7 @@ nv04_crtc_mode_set_base_atomic(struct drm_crtc *crtc,
 			       int x, int y, enum mode_set_atomic state)
 {
 	struct nouveau_drm *drm = nouveau_drm(crtc->dev);
-	struct drm_device *dev = drm->dev;
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 
 	if (state == ENTER_ATOMIC_MODE_SET)
 		nouveau_fbcon_accel_save_disable(dev);
@@ -990,7 +990,7 @@ nv04_crtc_cursor_set(struct drm_crtc *crtc, struct drm_file *file_priv,
 		     uint32_t buffer_handle, uint32_t width, uint32_t height)
 {
 	struct nouveau_drm *drm = nouveau_drm(crtc->dev);
-	struct drm_device *dev = drm->dev;
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	struct nouveau_crtc *nv_crtc = nouveau_crtc(crtc);
 	struct nouveau_bo *cursor = NULL;
 	struct drm_gem_object *gem;
@@ -1050,7 +1050,7 @@ nv04_finish_page_flip(struct nouveau_channel *chan,
 {
 	struct nouveau_fence_chan *fctx = chan->fence;
 	struct nouveau_drm *drm = chan->drm;
-	struct drm_device *dev = drm->dev;
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	struct nv04_page_flip_state *s;
 	unsigned long flags;
 
@@ -1088,7 +1088,7 @@ nv04_flip_complete(struct nvif_notify *notify)
 	struct nv04_page_flip_state state;
 
 	if (!nv04_finish_page_flip(chan, &state)) {
-		nv_set_crtc_base(drm->dev, drm_crtc_index(state.crtc),
+		nv_set_crtc_base(nouveau_to_drm_dev(drm), drm_crtc_index(state.crtc),
 				 state.offset + state.crtc->y *
 				 state.pitch + state.crtc->x *
 				 state.bpp / 8);
@@ -1106,7 +1106,7 @@ nv04_page_flip_emit(struct nouveau_channel *chan,
 {
 	struct nouveau_fence_chan *fctx = chan->fence;
 	struct nouveau_drm *drm = chan->drm;
-	struct drm_device *dev = drm->dev;
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	struct nvif_push *push = chan->chan.push;
 	unsigned long flags;
 	int ret;

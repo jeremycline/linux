@@ -325,7 +325,8 @@ static int
 nv50_outp_acquire(struct nouveau_encoder *nv_encoder, bool hda)
 {
 	struct nouveau_drm *drm = nouveau_drm(nv_encoder->base.base.dev);
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
+	struct nv50_disp *disp = nv50_disp(dev);
 	struct {
 		struct nv50_disp_mthd_v1 base;
 		struct nv50_disp_acquire_v0 info;
@@ -589,7 +590,6 @@ nv50_audio_component_get_eld(struct device *kdev, int port, int dev_id,
 			     bool *enabled, unsigned char *buf, int max_bytes)
 {
 	struct drm_device *drm_dev = dev_get_drvdata(kdev);
-	struct nouveau_drm *drm = nouveau_drm(drm_dev);
 	struct drm_encoder *encoder;
 	struct nouveau_encoder *nv_encoder;
 	struct drm_connector *connector;
@@ -599,7 +599,7 @@ nv50_audio_component_get_eld(struct device *kdev, int port, int dev_id,
 
 	*enabled = false;
 
-	drm_for_each_encoder(encoder, drm->dev) {
+	drm_for_each_encoder(encoder, drm_dev) {
 		struct nouveau_connector *nv_connector = NULL;
 
 		nv_encoder = nouveau_encoder(encoder);
@@ -677,7 +677,7 @@ static const struct component_ops nv50_audio_component_bind_ops = {
 static void
 nv50_audio_component_init(struct nouveau_drm *drm)
 {
-	if (!component_add(drm->dev->dev, &nv50_audio_component_bind_ops))
+	if (!component_add(nouveau_to_dev(drm), &nv50_audio_component_bind_ops))
 		drm->audio.component_registered = true;
 }
 
@@ -685,7 +685,7 @@ static void
 nv50_audio_component_fini(struct nouveau_drm *drm)
 {
 	if (drm->audio.component_registered) {
-		component_del(drm->dev->dev, &nv50_audio_component_bind_ops);
+		component_del(nouveau_to_dev(drm), &nv50_audio_component_bind_ops);
 		drm->audio.component_registered = false;
 	}
 }
@@ -2001,14 +2001,15 @@ static void
 nv50_disp_atomic_commit_core(struct drm_atomic_state *state, u32 *interlock)
 {
 	struct nouveau_drm *drm = nouveau_drm(state->dev);
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
+	struct nv50_disp *disp = nv50_disp(dev);
 	struct nv50_core *core = disp->core;
 	struct nv50_mstm *mstm;
 	struct drm_encoder *encoder;
 
 	NV_ATOMIC(drm, "commit core %08x\n", interlock[NV50_DISP_INTERLOCK_BASE]);
 
-	drm_for_each_encoder(encoder, drm->dev) {
+	drm_for_each_encoder(encoder, dev) {
 		if (encoder->encoder_type != DRM_MODE_ENCODER_DPMST) {
 			mstm = nouveau_encoder(encoder)->dp.mstm;
 			if (mstm && mstm->modified)
@@ -2022,7 +2023,7 @@ nv50_disp_atomic_commit_core(struct drm_atomic_state *state, u32 *interlock)
 				       disp->core->chan.base.device))
 		NV_ERROR(drm, "core notifier timeout\n");
 
-	drm_for_each_encoder(encoder, drm->dev) {
+	drm_for_each_encoder(encoder, dev) {
 		if (encoder->encoder_type != DRM_MODE_ENCODER_DPMST) {
 			mstm = nouveau_encoder(encoder)->dp.mstm;
 			if (mstm && mstm->modified)

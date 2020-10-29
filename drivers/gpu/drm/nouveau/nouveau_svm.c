@@ -265,7 +265,7 @@ nouveau_svmm_invalidate_range_start(struct mmu_notifier *mn,
 	 * the invalidation is handled as part of the migration process.
 	 */
 	if (update->event == MMU_NOTIFY_MIGRATE &&
-	    update->migrate_pgmap_owner == svmm->vmm->cli->drm->dev)
+	    update->migrate_pgmap_owner == nouveau_to_drm_dev(svmm->vmm->cli->drm))
 		goto out;
 
 	if (limit > svmm->unmanaged.start && start < svmm->unmanaged.limit) {
@@ -567,7 +567,7 @@ static int nouveau_range_fault(struct nouveau_svmm *svmm,
 		.end = notifier->notifier.interval_tree.last + 1,
 		.default_flags = hmm_flags,
 		.hmm_pfns = hmm_pfns,
-		.dev_private_owner = drm->dev,
+		.dev_private_owner = nouveau_to_drm_dev(drm),
 	};
 	struct mm_struct *mm = notifier->notifier.mm;
 	int ret;

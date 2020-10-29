@@ -85,7 +85,7 @@ nouveau_switcheroo_ops = {
 void
 nouveau_vga_init(struct nouveau_drm *drm)
 {
-	struct drm_device *dev = drm->dev;
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	bool runtime = nouveau_pmops_runtime();
 
 	/* only relevant for PCI devices */
@@ -101,13 +101,13 @@ nouveau_vga_init(struct nouveau_drm *drm)
 	vga_switcheroo_register_client(dev->pdev, &nouveau_switcheroo_ops, runtime);
 
 	if (runtime && nouveau_is_v1_dsm() && !nouveau_is_optimus())
-		vga_switcheroo_init_domain_pm_ops(drm->dev->dev, &drm->vga_pm_domain);
+		vga_switcheroo_init_domain_pm_ops(dev->dev, &drm->vga_pm_domain);
 }
 
 void
 nouveau_vga_fini(struct nouveau_drm *drm)
 {
-	struct drm_device *dev = drm->dev;
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	bool runtime = nouveau_pmops_runtime();
 
 	/* only relevant for PCI devices */
@@ -121,7 +121,7 @@ nouveau_vga_fini(struct nouveau_drm *drm)
 
 	vga_switcheroo_unregister_client(dev->pdev);
 	if (runtime && nouveau_is_v1_dsm() && !nouveau_is_optimus())
-		vga_switcheroo_fini_domain_pm_ops(drm->dev->dev);
+		vga_switcheroo_fini_domain_pm_ops(dev->dev);
 }
 
 

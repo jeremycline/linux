@@ -284,7 +284,7 @@ nouveau_ttm_init(struct nouveau_drm *drm)
 	struct nvkm_device *device = nvxx_device(&drm->client.device);
 	struct nvkm_pci *pci = device->pci;
 	struct nvif_mmu *mmu = &drm->client.mmu;
-	struct drm_device *dev = drm->dev;
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	bool need_swiotlb = false;
 	int typei, ret;
 
@@ -325,7 +325,7 @@ nouveau_ttm_init(struct nouveau_drm *drm)
 #endif
 
 	ret = ttm_bo_device_init(&drm->ttm.bdev, &nouveau_bo_driver,
-				 drm->dev->dev, dev->anon_inode->i_mapping,
+				 dev->dev, dev->anon_inode->i_mapping,
 				 dev->vma_offset_manager, need_swiotlb,
 				 drm->client.mmu.dmabits <= 32);
 	if (ret) {

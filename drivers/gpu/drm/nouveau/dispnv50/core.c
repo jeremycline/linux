@@ -58,7 +58,7 @@ nv50_core_new(struct nouveau_drm *drm, struct nv50_core **pcore)
 		{  NV50_DISP_CORE_CHANNEL_DMA, 0, core507d_new },
 		{}
 	};
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct nv50_disp *disp = nv50_disp(nouveau_to_drm_dev(drm));
 	int cid;
 
 	cid = nvif_mclass(&disp->disp->object, cores);

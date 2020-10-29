@@ -188,9 +188,9 @@ nouveau_fbcon_open(struct fb_info *info, int user)
 {
 	struct nouveau_fbdev *fbcon = info->par;
 	struct nouveau_drm *drm = nouveau_drm(fbcon->helper.dev);
-	int ret = pm_runtime_get_sync(drm->dev->dev);
+	int ret = pm_runtime_get_sync(nouveau_to_dev(drm));
 	if (ret < 0 && ret != -EACCES) {
-		pm_runtime_put(drm->dev->dev);
+		pm_runtime_put(nouveau_to_dev(drm));
 		return ret;
 	}
 	return 0;
@@ -201,7 +201,7 @@ nouveau_fbcon_release(struct fb_info *info, int user)
 {
 	struct nouveau_fbdev *fbcon = info->par;
 	struct nouveau_drm *drm = nouveau_drm(fbcon->helper.dev);
-	pm_runtime_put(drm->dev->dev);
+	pm_runtime_put(nouveau_to_dev(drm));
 	return 0;
 }
 
@@ -448,23 +448,24 @@ static void
 nouveau_fbcon_set_suspend_work(struct work_struct *work)
 {
 	struct nouveau_drm *drm = container_of(work, typeof(*drm), fbcon_work);
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	int state = READ_ONCE(drm->fbcon_new_state);
 
 	if (state == FBINFO_STATE_RUNNING)
-		pm_runtime_get_sync(drm->dev->dev);
+		pm_runtime_get_sync(dev->dev);
 
 	console_lock();
 	if (state == FBINFO_STATE_RUNNING)
-		nouveau_fbcon_accel_restore(drm->dev);
+		nouveau_fbcon_accel_restore(dev);
 	drm_fb_helper_set_suspend(&drm->fbcon->helper, state);
 	if (state != FBINFO_STATE_RUNNING)
-		nouveau_fbcon_accel_save_disable(drm->dev);
+		nouveau_fbcon_accel_save_disable(dev);
 	console_unlock();
 
 	if (state == FBINFO_STATE_RUNNING) {
 		nouveau_fbcon_hotplug_resume(drm->fbcon);
-		pm_runtime_mark_last_busy(drm->dev->dev);
-		pm_runtime_put_sync(drm->dev->dev);
+		pm_runtime_mark_last_busy(dev->dev);
+		pm_runtime_put_sync(dev->dev);
 	}
 }
 
@@ -511,7 +512,7 @@ nouveau_fbcon_output_poll_changed(struct drm_device *dev)
 		 */
 		NV_DEBUG(drm, "fbcon HPD event deferred until runtime resume\n");
 		fbcon->hotplug_waiting = true;
-		pm_runtime_put_noidle(drm->dev->dev);
+		pm_runtime_put_noidle(nouveau_to_dev(drm));
 	} else {
 		DRM_WARN("fbcon HPD event lost due to RPM failure: %d\n",
 			 ret);

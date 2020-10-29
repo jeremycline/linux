@@ -51,19 +51,20 @@ nouveau_debugfs_strap_peek(struct seq_file *m, void *data)
 {
 	struct drm_info_node *node = m->private;
 	struct nouveau_drm *drm = nouveau_drm(node->minor->dev);
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
 	int ret;
 
-	ret = pm_runtime_get_sync(drm->dev->dev);
+	ret = pm_runtime_get_sync(dev->dev);
 	if (ret < 0 && ret != -EACCES) {
-		pm_runtime_put_autosuspend(drm->dev->dev);
+		pm_runtime_put_autosuspend(dev->dev);
 		return ret;
 	}
 
 	seq_printf(m, "0x%08x\n",
 		   nvif_rd32(&drm->client.device.object, 0x101000));
 
-	pm_runtime_mark_last_busy(drm->dev->dev);
-	pm_runtime_put_autosuspend(drm->dev->dev);
+	pm_runtime_mark_last_busy(dev->dev);
+	pm_runtime_put_autosuspend(dev->dev);
 
 	return 0;
 }

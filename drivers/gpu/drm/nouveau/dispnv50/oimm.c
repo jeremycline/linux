@@ -38,7 +38,7 @@ nv50_oimm_init(struct nouveau_drm *drm, struct nv50_wndw *wndw)
 		{  NV50_DISP_OVERLAY, 0, oimm507b_init },
 		{}
 	};
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct nv50_disp *disp = nv50_disp(nouveau_to_drm_dev(drm));
 	int cid;
 
 	cid = nvif_mclass(&disp->disp->object, oimms);
