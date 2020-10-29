@@ -137,7 +137,11 @@ struct nouveau_drm {
 	struct nvif_parent parent;
 	struct nouveau_cli master;
 	struct nouveau_cli client;
-	struct drm_device *dev;
+
+	/**
+	 * @drm_dev: The parent DRM device object.
+	 */
+	struct drm_device drm_dev;
 
 	struct list_head clients;
 
@@ -237,7 +241,7 @@ struct nouveau_drm {
 static inline struct nouveau_drm *
 nouveau_drm(struct drm_device *dev)
 {
-	return dev->dev_private;
+	return container_of(dev, struct nouveau_drm, drm_dev);
 }
 
 /**
@@ -251,7 +255,7 @@ nouveau_drm(struct drm_device *dev)
  */
 static inline struct drm_device *
 nouveau_to_drm_dev(struct nouveau_drm *ndev) {
-	return ndev->dev;
+	return &ndev->drm_dev;
 }
 
 /**

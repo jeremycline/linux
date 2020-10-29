@@ -30,9 +30,11 @@
 #include <linux/vga_switcheroo.h>
 #include <linux/mmu_notifier.h>
 
+#include <drm/drm_drv.h>
 #include <drm/drm_crtc_helper.h>
 #include <drm/drm_ioctl.h>
 #include <drm/drm_vblank.h>
+#include <drm/drm_managed.h>
 
 #include <core/gpuobj.h>
 #include <core/option.h>
@@ -532,13 +534,8 @@ nouveau_parent = {
 static int
 nouveau_drm_device_init(struct drm_device *dev)
 {
-	struct nouveau_drm *drm;
 	int ret;
-
-	if (!(drm = kzalloc(sizeof(*drm), GFP_KERNEL)))
-		return -ENOMEM;
-	dev->dev_private = drm;
-	drm->dev = dev;
+	struct nouveau_drm *drm = nouveau_drm(dev);
 
 	nvif_parent_ctor(&nouveau_parent, &drm->parent);
 	drm->master.base.object.parent = &drm->parent;
@@ -620,7 +617,6 @@ fail_master:
 	nouveau_cli_fini(&drm->master);
 fail_alloc:
 	nvif_parent_dtor(&drm->parent);
-	kfree(drm);
 	return ret;
 }
 
@@ -654,7 +650,6 @@ nouveau_drm_device_fini(struct drm_device *dev)
 	nouveau_cli_fini(&drm->client);
 	nouveau_cli_fini(&drm->master);
 	nvif_parent_dtor(&drm->parent);
-	kfree(drm);
 }
 
 /*
@@ -720,6 +715,7 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
 {
 	struct nvkm_device *device;
 	struct drm_device *drm_dev;
+	struct nouveau_drm *ndev;
 	int ret;
 
 	if (vga_switcheroo_client_probe_defer(pdev))
@@ -750,11 +746,12 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
 	if (nouveau_atomic)
 		driver_pci.driver_features |= DRIVER_ATOMIC;
 
-	drm_dev = drm_dev_alloc(&driver_pci, &pdev->dev);
-	if (IS_ERR(drm_dev)) {
-		ret = PTR_ERR(drm_dev);
+	ndev = devm_drm_dev_alloc(&pdev->dev, &driver_stub, typeof(*ndev), drm_dev);
+	if (IS_ERR(ndev)) {
+		ret = PTR_ERR(ndev);
 		goto fail_nvkm;
 	}
+	drm_dev = nouveau_to_drm_dev(ndev);
 
 	ret = pci_enable_device(pdev);
 	if (ret)
@@ -799,7 +796,6 @@ nouveau_drm_device_remove(struct drm_device *dev)
 	device = nvkm_device_find(client->device);
 
 	nouveau_drm_device_fini(dev);
-	drm_dev_put(dev);
 	nvkm_device_del(&device);
 }
 
@@ -1285,7 +1281,8 @@ nouveau_platform_device_create(const struct nvkm_device_tegra_func *func,
 			       struct platform_device *pdev,
 			       struct nvkm_device **pdevice)
 {
-	struct drm_device *drm;
+	struct nouveau_drm *nv_dev;
+	struct drm_device *drm_dev;
 	int err;
 
 	err = nvkm_device_tegra_new(func, pdev, nouveau_config, nouveau_debug,
@@ -1293,22 +1290,24 @@ nouveau_platform_device_create(const struct nvkm_device_tegra_func *func,
 	if (err)
 		goto err_free;
 
-	drm = drm_dev_alloc(&driver_platform, &pdev->dev);
-	if (IS_ERR(drm)) {
-		err = PTR_ERR(drm);
+	nv_dev = devm_drm_dev_alloc(&pdev->dev, &driver_platform, typeof(*nv_dev), drm_dev);
+	if (IS_ERR(nv_dev)) {
+		err = PTR_ERR(nv_dev);
 		goto err_free;
 	}
+	drm_dev = nouveau_to_drm_dev(nv_dev);
 
-	err = nouveau_drm_device_init(drm);
+	err = nouveau_drm_device_init(drm_dev);
 	if (err)
 		goto err_put;
 
-	platform_set_drvdata(pdev, drm);
+	platform_set_drvdata(pdev, drm_dev);
 
-	return drm;
+	return drm_dev;
 
 err_put:
-	drm_dev_put(drm);
+	// TODO is the device deconstructed if this returns an error?
+	drm_dev_put(drm_dev);
 err_free:
 	nvkm_device_del(pdevice);
 
