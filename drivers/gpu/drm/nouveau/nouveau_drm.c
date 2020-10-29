@@ -554,6 +554,7 @@ nouveau_drm_device_init(struct drm_device *dev)
 		nvkm_dbgopt(nouveau_debug, "DRM");
 
 	INIT_LIST_HEAD(&drm->clients);
+	mutex_init(&drm->clients_lock);
 	spin_lock_init(&drm->tile.lock);
 
 	/* workaround an odd issue on nvc1 by disabling the device's
@@ -620,9 +621,15 @@ fail_alloc:
 	return ret;
 }
 
+/**
+ * nouveau_drm_device_fini() - Prepare the device for removal.
+ *
+ * Any unmanaged resources allocated for the device should be deallocated here.
+ */
 static void
 nouveau_drm_device_fini(struct drm_device *dev)
 {
+	struct nouveau_cli *cli, *temp_cli;
 	struct nouveau_drm *drm = nouveau_drm(dev);
 
 	if (nouveau_pmops_runtime()) {
@@ -646,6 +653,16 @@ nouveau_drm_device_fini(struct drm_device *dev)
 
 	nouveau_ttm_fini(drm);
 	nouveau_vga_fini(drm);
+
+	mutex_lock(&drm->clients_lock);
+	if (!list_empty(&drm->clients)) {
+		list_for_each_entry_safe(cli, temp_cli, &drm->clients, head) {
+			list_del(&cli->head);
+			nouveau_cli_fini(cli);
+			kfree(cli);
+		}
+	}
+	mutex_unlock(&drm->clients_lock);
 
 	nouveau_cli_fini(&drm->client);
 	nouveau_cli_fini(&drm->master);
@@ -1085,9 +1102,9 @@ nouveau_drm_open(struct drm_device *dev, struct drm_file *fpriv)
 
 	fpriv->driver_priv = cli;
 
-	mutex_lock(&drm->client.mutex);
+	mutex_lock(&drm->clients_lock);
 	list_add(&cli->head, &drm->clients);
-	mutex_unlock(&drm->client.mutex);
+	mutex_unlock(&drm->clients_lock);
 
 done:
 	if (ret && cli) {
@@ -1105,6 +1122,17 @@ nouveau_drm_postclose(struct drm_device *dev, struct drm_file *fpriv)
 {
 	struct nouveau_cli *cli = nouveau_cli(fpriv);
 	struct nouveau_drm *drm = nouveau_drm(dev);
+	bool device_closed = false;
+
+	mutex_lock(&drm->clients_lock);
+	if (list_empty(&drm->clients)) {
+		device_closed = true;
+		NV_ERROR(drm, "client list is empty so device is gone; quitting");
+	}
+	mutex_unlock(&drm->clients_lock);
+
+	if (device_closed)
+		return;
 
 	pm_runtime_get_sync(dev->dev);
 
@@ -1113,9 +1141,11 @@ nouveau_drm_postclose(struct drm_device *dev, struct drm_file *fpriv)
 		nouveau_abi16_fini(cli->abi16);
 	mutex_unlock(&cli->mutex);
 
-	mutex_lock(&drm->client.mutex);
-	list_del(&cli->head);
-	mutex_unlock(&drm->client.mutex);
+	mutex_lock(&drm->clients_lock);
+	if (!list_empty(&drm->clients)) {
+		list_del(&cli->head);
+	}
+	mutex_unlock(&drm->clients_lock);
 
 	nouveau_cli_fini(cli);
 	kfree(cli);
