@@ -788,7 +788,7 @@ nv50_wndw_new(struct nouveau_drm *drm, enum drm_plane_type type, int index,
 		{ GV100_DISP_WINDOW_CHANNEL_DMA, 0, wndwc37e_new },
 		{}
 	};
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct nv50_disp *disp = nv50_disp(nouveau_to_drm_dev(drm));
 	int cid, ret;
 
 	cid = nvif_mclass(&disp->disp->object, wndws);

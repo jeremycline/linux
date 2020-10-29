@@ -121,7 +121,7 @@ core507d_new_(const struct nv50_core_func *func, struct nouveau_drm *drm,
 	      s32 oclass, struct nv50_core **pcore)
 {
 	struct nv50_disp_core_channel_dma_v0 args = {};
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct nv50_disp *disp = nv50_disp(nouveau_to_drm_dev(drm));
 	struct nv50_core *core;
 	int ret;
 

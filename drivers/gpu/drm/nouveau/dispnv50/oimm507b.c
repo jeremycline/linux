@@ -30,7 +30,7 @@ oimm507b_init_(const struct nv50_wimm_func *func, struct nouveau_drm *drm,
 	struct nv50_disp_overlay_v0 args = {
 		.head = wndw->id,
 	};
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct nv50_disp *disp = nv50_disp(nouveau_to_drm_dev(drm));
 	int ret;
 
 	ret = nvif_object_ctor(&disp->disp->object, "kmsOvim", 0, oclass,

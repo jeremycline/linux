@@ -40,7 +40,7 @@ nv50_curs_new(struct nouveau_drm *drm, int head, struct nv50_wndw **pwndw)
 		{  NV50_DISP_CURSOR, 0, curs507a_new },
 		{}
 	};
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct nv50_disp *disp = nv50_disp(nouveau_to_drm_dev(drm));
 	int cid;
 
 	cid = nvif_mclass(&disp->disp->object, curses);

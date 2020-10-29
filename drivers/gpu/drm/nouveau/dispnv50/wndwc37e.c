@@ -359,11 +359,12 @@ wndwc37e_new_(const struct nv50_wndw_func *func, struct nouveau_drm *drm,
 		.pushbuf = 0xb0007e00 | index,
 		.index = index,
 	};
-	struct nv50_disp *disp = nv50_disp(drm->dev);
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
+	struct nv50_disp *disp = nv50_disp(dev);
 	struct nv50_wndw *wndw;
 	int ret;
 
-	ret = nv50_wndw_new_(func, drm->dev, type, "wndw", index,
+	ret = nv50_wndw_new_(func, dev, type, "wndw", index,
 			     wndwc37e_format, heads, NV50_DISP_INTERLOCK_WNDW,
 			     BIT(index), &wndw);
 	if (*pwndw = wndw, ret)

@@ -305,12 +305,13 @@ base507c_new_(const struct nv50_wndw_func *func, const u32 *format,
 	struct nv50_disp_base_channel_dma_v0 args = {
 		.head = head,
 	};
-	struct nouveau_display *disp = nouveau_display(drm->dev);
-	struct nv50_disp *disp50 = nv50_disp(drm->dev);
+	struct drm_device *dev = nouveau_to_drm_dev(drm);
+	struct nouveau_display *disp = nouveau_display(dev);
+	struct nv50_disp *disp50 = nv50_disp(dev);
 	struct nv50_wndw *wndw;
 	int ret;
 
-	ret = nv50_wndw_new_(func, drm->dev, DRM_PLANE_TYPE_PRIMARY,
+	ret = nv50_wndw_new_(func, dev, DRM_PLANE_TYPE_PRIMARY,
 			     "base", head, format, BIT(head),
 			     NV50_DISP_INTERLOCK_BASE, interlock_data, &wndw);
 	if (*pwndw = wndw, ret)

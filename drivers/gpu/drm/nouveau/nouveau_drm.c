@@ -213,7 +213,7 @@ nouveau_cli_init(struct nouveau_drm *drm, const char *sname,
 		{ NVIF_CLASS_VMM_NV04 , -1 },
 		{}
 	};
-	u64 device = nouveau_name(drm->dev);
+	u64 device = nouveau_name(nouveau_to_drm_dev(drm));
 	int ret;
 
 	snprintf(cli->name, sizeof(cli->name), "%s", sname);

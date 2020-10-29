@@ -226,10 +226,43 @@ struct nouveau_drm {
 	} audio;
 };
 
+/**
+ * nouveau_drm() - Retrieve the &struct nouveau_drm from a &struct drm_device.
+ * @dev: The generic DRM device structure.
+ *
+ * This is the inverse of the nouveau_to_drm_dev() function.
+ *
+ * RETURNS: A pointer to the containing &struct nouveau_drm.
+ */
 static inline struct nouveau_drm *
 nouveau_drm(struct drm_device *dev)
 {
 	return dev->dev_private;
+}
+
+/**
+ * nouveau_to_drm_dev() - Get a &struct drm_device from the device-specific
+ * struct.
+ * @ndev: The nouveau-specific device structure.
+ *
+ * This is the inverse of the nouveau_drm() function.
+ *
+ * RETURNS: A pointer to the generic &struct drm_device.
+ */
+static inline struct drm_device *
+nouveau_to_drm_dev(struct nouveau_drm *ndev) {
+	return ndev->dev;
+}
+
+/**
+ * nouveau_to_dev() - Get the generic &struct device for the nouveau device.
+ *
+ * RETURNS: A pointer to the generic &struct device associated with the
+ * driver-specific &struct nouveau_drm.
+ */
+static inline struct device *
+nouveau_to_dev(struct nouveau_drm *ndev) {
+	return nouveau_to_drm_dev(ndev)->dev;
 }
 
 static inline bool
@@ -252,7 +285,7 @@ void nouveau_drm_device_remove(struct drm_device *dev);
 
 #define NV_PRINTK(l,c,f,a...) do {                                             \
 	struct nouveau_cli *_cli = (c);                                        \
-	dev_##l(_cli->drm->dev->dev, "%s: "f, _cli->name, ##a);                \
+	dev_##l(nouveau_to_dev(_cli->drm), "%s: "f, _cli->name, ##a);                \
 } while(0)
 
 #define NV_FATAL(drm,f,a...) NV_PRINTK(crit, &(drm)->client, f, ##a)
