@@ -655,12 +655,10 @@ nouveau_drm_device_fini(struct drm_device *dev)
 	nouveau_vga_fini(drm);
 
 	mutex_lock(&drm->clients_lock);
-	if (!list_empty(&drm->clients)) {
-		list_for_each_entry_safe(cli, temp_cli, &drm->clients, head) {
-			list_del(&cli->head);
-			nouveau_cli_fini(cli);
-			kfree(cli);
-		}
+	list_for_each_entry_safe(cli, temp_cli, &drm->clients, head) {
+		list_del(&cli->head);
+		nouveau_cli_fini(cli);
+		kfree(cli);
 	}
 	mutex_unlock(&drm->clients_lock);
 
@@ -772,7 +770,7 @@ static int nouveau_drm_probe(struct pci_dev *pdev,
 
 	ret = pci_enable_device(pdev);
 	if (ret)
-		goto fail_drm;
+		goto fail_nvkm;
 
 	drm_dev->pdev = pdev;
 	pci_set_drvdata(pdev, drm_dev);
@@ -792,8 +790,6 @@ fail_drm_dev_init:
 	nouveau_drm_device_fini(drm_dev);
 fail_pci:
 	pci_disable_device(pdev);
-fail_drm:
-	drm_dev_put(drm_dev);
 fail_nvkm:
 	nvkm_device_del(&device);
 	return ret;
@@ -1122,16 +1118,13 @@ nouveau_drm_postclose(struct drm_device *dev, struct drm_file *fpriv)
 {
 	struct nouveau_cli *cli = nouveau_cli(fpriv);
 	struct nouveau_drm *drm = nouveau_drm(dev);
-	bool device_closed = false;
+	int dev_index;
 
-	mutex_lock(&drm->clients_lock);
-	if (list_empty(&drm->clients)) {
-		device_closed = true;
-		NV_ERROR(drm, "client list is empty so device is gone; quitting");
-	}
-	mutex_unlock(&drm->clients_lock);
-
-	if (device_closed)
+	// The device is gone, and as it currently stands all clients are
+	// cleaned up in the removal codepath. In the future this may change
+	// so that we can support hot-unplugging, but for now we immediately
+	// return to avoid a double-free situation.
+	if (!drm_dev_enter(dev, &dev_index))
 		return;
 
 	pm_runtime_get_sync(dev->dev);
@@ -1151,6 +1144,7 @@ nouveau_drm_postclose(struct drm_device *dev, struct drm_file *fpriv)
 	kfree(cli);
 	pm_runtime_mark_last_busy(dev->dev);
 	pm_runtime_put_autosuspend(dev->dev);
+	drm_dev_exit(dev_index);
 }
 
 static const struct drm_ioctl_desc
@@ -1329,15 +1323,12 @@ nouveau_platform_device_create(const struct nvkm_device_tegra_func *func,
 
 	err = nouveau_drm_device_init(drm_dev);
 	if (err)
-		goto err_put;
+		goto err_free;
 
 	platform_set_drvdata(pdev, drm_dev);
 
 	return drm_dev;
 
-err_put:
-	// TODO is the device deconstructed if this returns an error?
-	drm_dev_put(drm_dev);
 err_free:
 	nvkm_device_del(pdevice);
 

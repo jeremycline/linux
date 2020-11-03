@@ -35,12 +35,7 @@ static int nouveau_platform_probe(struct platform_device *pdev)
 		return PTR_ERR(drm);
 
 	ret = drm_dev_register(drm, 0);
-	if (ret < 0) {
-		drm_dev_put(drm);
-		return ret;
-	}
-
-	return 0;
+	return ret;
 }
 
 static int nouveau_platform_remove(struct platform_device *pdev)
